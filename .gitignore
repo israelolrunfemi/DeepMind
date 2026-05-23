@@ -1,0 +1,17 @@
+.env
+AGENT.MD
+UPGRADE.MD
+
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+.venv/
+venv/
+env/
+pip-wheel-metadata/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+uvicorn.out.log
+uvicorn.err.log
