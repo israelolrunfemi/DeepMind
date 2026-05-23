@@ -1,7 +1,6 @@
 .env
 AGENT.MD
 UPGRADE.MD
-
 __pycache__/
 *.py[cod]
 *$py.class
@@ -15,3 +14,5 @@ pip-wheel-metadata/
 .ruff_cache/
 uvicorn.out.log
 uvicorn.err.log
+devmind_memory/
+workspace/

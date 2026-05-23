@@ -1,5 +1,5 @@
 # DevMind 🧠
-> An autonomous multi-agent AI system that takes a natural language task, plans it, writes Python code, executes it in a sandboxed environment, and self-heals from errors — all without human intervention.
+> DevMind is an autonomous multi-agent coding assistant built in Python. It takes a natural language task, breaks it into a structured plan, writes complete Python code, executes it in a sandboxed subprocess, and automatically debugs failures — all without human intervention. It can also scaffold entire multi-file projects, search the web for docs on the fly, and persist session history across runs. Built with FastAPI, Hugging Face Inference API (Qwen2.5-Coder-7B-Instruct), and a clean multi-agent architecture where every agent has a single responsibility.
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue)
 ![FastAPI](https://img.shields.io/badge/FastAPI-async-green)

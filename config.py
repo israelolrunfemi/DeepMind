@@ -14,6 +14,12 @@ APP_VERSION = "0.1.0"
 HEALTH_ENDPOINT = "/health"
 RUN_ENDPOINT = "/run"
 HEALTH_STATUS = "ok"
+PROJECT_RUN_ENDPOINT = "/run/project"
+SESSIONS_ENDPOINT = "/sessions"
+TOOLS_ENDPOINT = "/tools"
+EVENTS_ENDPOINT = "/events"
+DASHBOARD_ENDPOINT = "/dashboard"
+DASHBOARD_TEMPLATE = "templates/dashboard.html"
 
 HF_TOKEN = os.getenv("HF_TOKEN") or os.getenv("HF_API_TOKEN")
 MODEL_NAME = "Qwen/Qwen2.5-Coder-7B-Instruct:nscale"
@@ -21,6 +27,12 @@ MODEL_NAME = "Qwen/Qwen2.5-Coder-7B-Instruct:nscale"
 MAX_RETRIES = 3
 EXECUTION_TIMEOUT = 15
 SANDBOX_DIR = os.getenv("DEVMIND_SANDBOX_DIR", "/tmp/devmind_sandbox")
+MEMORY_DIR = "devmind_memory"
+WORKSPACE_DIR = "workspace"
+MAX_PROJECT_FILES = 20
+DASHBOARD_REFRESH_MS = 1000
+DUCKDUCKGO_URL = "https://api.duckduckgo.com/"
+WEB_SEARCH_TIMEOUT = 10.0
 
 LLM_MAX_TOKENS = 2048
 LLM_TEMPERATURE = 0.2

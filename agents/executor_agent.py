@@ -12,4 +12,10 @@ class ExecutorAgent(BaseAgent):
     """Run generated Python code inside the sandbox."""
 
     async def run(self, code: str) -> ExecutionResult:
-        return await run_code(code, timeout=EXECUTION_TIMEOUT)
+        self.emit_start({"code_length": len(code)})
+        result = await run_code(code, timeout=EXECUTION_TIMEOUT)
+        if result.status == "error":
+            self.emit_error(result.error or "Execution failed")
+        else:
+            self.emit_complete({"output_length": len(result.output or "")})
+        return result

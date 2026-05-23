@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DevMind Dashboard</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --panel: #161b22;
+      --line: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --blue: #58a6ff;
+      --green: #3fb950;
+      --red: #f85149;
+      --orange: #d29922;
+      --purple: #bc8cff;
+      --teal: #39c5cf;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Fira Code", Consolas, "Courier New", monospace;
+    }
+    header {
+      padding: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+    h1, h2 {
+      margin: 0;
+      letter-spacing: 0;
+    }
+    h1 { font-size: 24px; }
+    h2 { font-size: 16px; margin-bottom: 12px; }
+    main {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: 2fr 1fr;
+      padding: 24px;
+    }
+    section, .stat {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+    section { padding: 16px; min-width: 0; }
+    .stats {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(3, 1fr);
+      margin-top: 18px;
+    }
+    .stat { padding: 14px; }
+    .label { color: var(--muted); font-size: 12px; }
+    .value { font-size: 22px; margin-top: 6px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 8px;
+      text-align: left;
+      vertical-align: top;
+      overflow-wrap: anywhere;
+    }
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    button {
+      background: #238636;
+      color: white;
+      border: 0;
+      border-radius: 6px;
+      padding: 7px 10px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    pre {
+      background: #010409;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      overflow: auto;
+      padding: 12px;
+      max-height: 340px;
+      white-space: pre-wrap;
+    }
+    .agent_start { color: var(--blue); }
+    .agent_complete { color: var(--green); }
+    .agent_error { color: var(--red); }
+    .agent_retry { color: var(--orange); }
+    .tool_call, .tool_result { color: var(--purple); }
+    .pipeline_start, .pipeline_complete { color: var(--teal); }
+    .side {
+      display: grid;
+      gap: 16px;
+      align-content: start;
+    }
+    #tools {
+      white-space: pre-wrap;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.72);
+      padding: 32px;
+    }
+    .modal.open { display: block; }
+    .modal-content {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 18px;
+      max-height: calc(100vh - 64px);
+      overflow: auto;
+    }
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 980px) {
+      main { grid-template-columns: 1fr; padding: 14px; }
+      .stats { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>DevMind Observability</h1>
+    <div class="stats">
+      <div class="stat"><div class="label">Total Sessions</div><div id="totalSessions" class="value">0</div></div>
+      <div class="stat"><div class="label">Success Rate</div><div id="successRate" class="value">0%</div></div>
+      <div class="stat"><div class="label">Average Attempts</div><div id="averageAttempts" class="value">0</div></div>
+    </div>
+  </header>
+  <main>
+    <div>
+      <section>
+        <h2>Live Agent Feed</h2>
+        <table>
+          <thead><tr><th>Time</th><th>Agent</th><th>Event Type</th><th>Details</th></tr></thead>
+          <tbody id="events"></tbody>
+        </table>
+      </section>
+      <section style="margin-top:16px;">
+        <h2>Session History</h2>
+        <table>
+          <thead><tr><th>Timestamp</th><th>Task</th><th>Success</th><th>Attempts</th><th>View</th></tr></thead>
+          <tbody id="sessions"></tbody>
+        </table>
+      </section>
+    </div>
+    <div class="side">
+      <section>
+        <h2>Available Tools</h2>
+        <div id="tools"></div>
+      </section>
+    </div>
+  </main>
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-head">
+        <h2 id="modalTitle">Session</h2>
+        <button onclick="closeModal()">Close</button>
+      </div>
+      <div class="label">Code</div>
+      <pre id="modalCode"></pre>
+      <div class="label">Output</div>
+      <pre id="modalOutput"></pre>
+    </div>
+  </div>
+  <script>
+    const eventsBody = document.getElementById("events");
+    const sessionsBody = document.getElementById("sessions");
+    const toolsBox = document.getElementById("tools");
+    const modal = document.getElementById("modal");
+
+    function short(value, max) {
+      const text = String(value || "");
+      return text.length > max ? text.slice(0, max - 1) + "..." : text;
+    }
+
+    function updateStats(sessions) {
+      const total = sessions.length;
+      const successes = sessions.filter((item) => item.success).length;
+      const attempts = sessions.reduce((sum, item) => sum + Number(item.attempts || 0), 0);
+      document.getElementById("totalSessions").textContent = total;
+      document.getElementById("successRate").textContent = total ? Math.round((successes / total) * 100) + "%" : "0%";
+      document.getElementById("averageAttempts").textContent = total ? (attempts / total).toFixed(1) : "0";
+    }
+
+    async function loadSessions() {
+      const response = await fetch("/sessions");
+      const sessions = await response.json();
+      updateStats(sessions);
+      sessionsBody.innerHTML = "";
+      for (const session of sessions) {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${session.timestamp}</td><td>${short(session.task, 90)}</td><td>${session.success}</td><td>${session.attempts}</td><td><button>View</button></td>`;
+        row.querySelector("button").addEventListener("click", () => viewSession(session.session_id));
+        sessionsBody.appendChild(row);
+      }
+    }
+
+    async function loadTools() {
+      const response = await fetch("/tools");
+      const payload = await response.json();
+      toolsBox.textContent = payload.tools;
+    }
+
+    async function viewSession(id) {
+      const response = await fetch(`/sessions/${id}`);
+      const session = await response.json();
+      document.getElementById("modalTitle").textContent = short(session.task, 100);
+      document.getElementById("modalCode").textContent = session.code || "";
+      document.getElementById("modalOutput").textContent = session.output || "";
+      modal.classList.add("open");
+    }
+
+    function closeModal() {
+      modal.classList.remove("open");
+    }
+
+    const source = new EventSource("/events");
+    source.onmessage = (message) => {
+      const event = JSON.parse(message.data);
+      const row = document.createElement("tr");
+      row.className = event.type;
+      row.innerHTML = `<td>${event.timestamp}</td><td>${event.agent}</td><td>${event.type}</td><td>${short(JSON.stringify(event.data), 180)}</td>`;
+      eventsBody.prepend(row);
+      while (eventsBody.children.length > 100) {
+        eventsBody.removeChild(eventsBody.lastChild);
+      }
+      if (event.type === "pipeline_complete") {
+        loadSessions();
+      }
+    };
+
+    loadSessions();
+    loadTools();
+  </script>
+</body>
+</html>
