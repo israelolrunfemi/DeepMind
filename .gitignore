@@ -16,3 +16,5 @@ uvicorn.out.log
 uvicorn.err.log
 devmind_memory/
 workspace/
+devmind_memory/
+workspace/
